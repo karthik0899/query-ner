@@ -2,10 +2,23 @@ import streamlit as st
 import spacy
 import json
 import re
+import subprocess
+import sys
+
+def download_nlp_model():
+    subprocess.check_call([sys.executable, "-m", "spacy", "download", "en_core_web_sm"])
 
 @st.cache_resource
 def load_nlp_model():
-    return spacy.load("en_core_web_sm")
+    try:
+        return spacy.load("en_core_web_sm")
+    except OSError:
+        download_nlp_model()
+        return spacy.load("en_core_web_sm")
+
+# ... (rest of the code remains the same)
+
+
 
 def query_ner(text, nlp):
     doc = nlp(text)
@@ -37,7 +50,8 @@ def main():
     st.write("Enter text to extract main topic, author, and years.")
 
     # Load the spaCy model
-    nlp = load_nlp_model()
+    with st.spinner("Loading NLP model... This may take a moment."):
+        nlp = load_nlp_model()
 
     # Text input
     text = st.text_area("Enter your text here:", height=100)
